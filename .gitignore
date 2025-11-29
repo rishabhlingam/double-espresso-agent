@@ -1,0 +1,66 @@
+# -------------------------
+# ENVIRONMENT VARIABLES
+# -------------------------
+.env
+*.env
+
+# -------------------------
+# PYTHON BACKEND
+# -------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+chat.db
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# FastAPI / ADK cache
+*.log
+.adk/
+adk_client/__pycache__/
+
+# -------------------------
+# NODE / FRONTEND
+# -------------------------
+node_modules/
+frontend/node_modules/
+backend/frontend/node_modules/
+
+# Build outputs
+dist/
+build/
+frontend/dist/
+backend/frontend/dist/
+
+# Cache
+.npm/
+.npm-cache/
+.pnpm-store/
+.yarn/
+.yarn-cache/
+
+# Vite / React stuff
+*.local
+*.cache
+.vite/
+
+# -------------------------
+# OS & EDITOR FILES
+# -------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+*.swp
+*.swo
+
+# -------------------------
+# MISC
+# -------------------------
+*.log
+UI Changes.txt
