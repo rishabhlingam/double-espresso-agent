@@ -27,18 +27,33 @@ def get_db():
 # ------------------------------------------------------
 @router.post("/", response_model=schemas.ChatRead)
 def create_primary_chat(db: Session = Depends(get_db)):
+    """
+    Create a new PRIMARY chat and a matching ADK session.
 
-    # We no longer rely on persistent ADK sessions.
-    # adk_session_id is kept only as a placeholder / metadata if you want.
+    - One Chat row <-> one ADK session (stored in Chat.adk_session_id).
+    - The ADK session is persisted via DatabaseSessionService.
+    """
+
+    user_id = "user"  # TODO: wire this to real authenticated user if needed
+
+    # Create ADK session first
+    adk_session_id = adk_manager.create_session(
+        chat_type="primary",
+        user_id=user_id,
+        initial_state={},  # can be extended later if needed
+    )
+
+    # Create Chat row with the ADK session ID
     chat = models.Chat(
         type=models.ChatType.primary,
-        adk_session_id="",  # not used anymore
+        adk_session_id=adk_session_id,
     )
     db.add(chat)
     db.commit()
     db.refresh(chat)
 
     return chat
+
 
 # ------------------------------------------------------
 # Send a message to ANY chat (primary or secondary)
@@ -49,6 +64,18 @@ def send_message(
     payload: schemas.MessageCreate,
     db: Session = Depends(get_db),
 ):
+    """
+    Send a user message into an existing chat.
+
+    Flow:
+    1) Load Chat row (has type + adk_session_id).
+    2) Ensure the chat has an ADK session (create lazily if needed for legacy rows).
+    3) Save user message to DB.
+    4) Call ADK using the existing session_id.
+    5) Save assistant reply to DB.
+    6) Return updated Chat with messages.
+    """
+
     chat = (
         db.query(models.Chat)
         .filter(models.Chat.id == chat_id)
@@ -58,7 +85,21 @@ def send_message(
     if not chat:
         raise HTTPException(status_code=404, detail="Chat not found")
 
-    # 1) Save user's new message
+    user_id = "user"  # TODO: real user ID if you have auth
+
+    # Backward compatibility / safety:
+    # If old rows exist with empty adk_session_id, create a session now.
+    if not chat.adk_session_id:
+        chat.adk_session_id = adk_manager.create_session(
+            chat_type=chat.type.value,
+            user_id=user_id,
+            initial_state={},
+        )
+        db.add(chat)
+        db.commit()
+        db.refresh(chat)
+
+    # 1) Save user's new message in DB
     user_msg = models.Message(
         chat_id=chat.id,
         role="user",
@@ -68,22 +109,16 @@ def send_message(
     db.commit()
     db.refresh(user_msg)
 
-    # 2) Reload chat with all messages (includes the new user message)
-    db.refresh(chat)
-
-    # 3) Build history for ADK from DB messages
-    history = [
-        {"role": m.role, "content": m.content}
-        for m in chat.messages
-    ]
-
-    # 4) Call ADK statelessly with full history
+    # 2) Call ADK with ONLY the latest user message,
+    #    letting the session carry context via events/state.
     reply_text = adk_manager.send_message(
         chat_type=chat.type.value,
-        history=history,
+        session_id=chat.adk_session_id,
+        text=payload.content,
+        user_id=user_id,
     )
 
-    # 5) Save assistant's reply
+    # 3) Save assistant's reply in DB
     assistant_msg = models.Message(
         chat_id=chat.id,
         role="assistant",
@@ -94,7 +129,6 @@ def send_message(
 
     db.refresh(chat)
     return chat
-
 
 
 # ------------------------------------------------------
@@ -121,6 +155,20 @@ def create_or_get_secondary_chat(
     req: schemas.ForkRequest,
     db: Session = Depends(get_db),
 ):
+    """
+    Secondary chats are clarification threads attached to a specific
+    parent message in a primary chat.
+
+    - We ensure at most 1 secondary chat per parent_message_id.
+    - When creating a new secondary chat:
+        * We create a NEW ADK session for the secondary agent.
+        * We initialize session.state["secondary:parent_answer"] with the
+          content of the parent message (usually an assistant answer).
+        * The secondary agent instruction uses {secondary:parent_answer}
+          so it always has access to that answer.
+        * We also seed DB messages so the UI shows the original answer.
+    """
+
     # Validate parent message
     parent_msg = (
         db.query(models.Message)
@@ -144,19 +192,32 @@ def create_or_get_secondary_chat(
     if existing:
         return existing
 
-    # Create secondary chat
+    user_id = "user"  # TODO: real user id
+
+    # Create ADK session for the SECONDARY chat with initial state
+    # containing the parent answer.
+    initial_state = {
+        "secondary:parent_answer": parent_msg.content,
+    }
+    adk_session_id = adk_manager.create_session(
+        chat_type="secondary",
+        user_id=user_id,
+        initial_state=initial_state,
+    )
+
+    # Create secondary chat row
     chat = models.Chat(
         type=models.ChatType.secondary,
         parent_chat_id=req.parent_chat_id,
         parent_message_id=req.parent_message_id,
-        adk_session_id="",  # not used
+        adk_session_id=adk_session_id,
     )
-    
+
     db.add(chat)
     db.commit()
     db.refresh(chat)
 
-    # Seed system message (hidden in UI)
+    # Seed system message (hidden in UI, but kept for clarity).
     seed_msg = models.Message(
         chat_id=chat.id,
         role="system",
@@ -173,13 +234,14 @@ def create_or_get_secondary_chat(
     original_assistant_msg = models.Message(
         chat_id=chat.id,
         role="assistant",
-        content=parent_msg.content
+        content=parent_msg.content,
     )
     db.add(original_assistant_msg)
     db.commit()
 
     db.refresh(chat)
     return chat
+
 
 # ------------------------------------------------------
 # Get all chats

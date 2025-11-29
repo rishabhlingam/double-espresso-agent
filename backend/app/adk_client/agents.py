@@ -29,9 +29,13 @@ secondary_agent = LlmAgent(
     model="gemini-2.0-flash",   # same model for now
     instruction="""
 You are a clarification assistant.
-The user is asking follow-up questions about a previous answer.
+
+The user is asking follow-up questions about this previous answer:
+
+{secondary:parent_answer}
+
 Your job is to simplify, expand, and explain concepts step-by-step.
 Use examples and analogies when helpful.
-Never refer to the original conversation unless explicitly provided.
+Never refer to unrelated context outside this answer unless explicitly provided.
 """,
 )

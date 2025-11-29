@@ -1,106 +1,114 @@
 """
-ADK Session Manager (Stateless per message)
--------------------------------------------
+ADK Session Manager (Stateful per chat)
+---------------------------------------
 
-We do NOT persist ADK sessions across requests.
+New behavior:
 
-For each user message:
-- We take the full chat history (from the DB)
-- We build a combined prompt as a single user message
-- We create a fresh in-memory ADK session
-- We call runner.run(...) once
-- We return the final text
+- Each Chat row in the DB has a single ADK session ID (adk_session_id).
+- We use DatabaseSessionService so that sessions (events + state) persist across
+  application restarts.
+- When the user sends a message:
+    * We reuse the existing session_id from the Chat record.
+    * We send ONLY the new user message to ADK.
+    * The Runner loads full conversation context from the session (events + state).
 
-Chats and messages are persisted in our database, not in ADK.
+For SECONDARY chats:
+- We create the ADK session with initial state containing the parent answer:
+    state["secondary:parent_answer"] = <parent_msg.content>
+- The secondary agent instruction uses {secondary:parent_answer} templating.
 """
 
-import uuid
-from typing import Literal, List, Dict
+from typing import Literal, Optional
 
 from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
+from google.adk.sessions import DatabaseSessionService
 from google.genai import types
 
 from .agents import primary_agent, secondary_agent
 
 
+APP_NAME = "CoffeeLM"
+
+# ADK will store its own session tables here.
+# This is separate from your SQLAlchemy chat.db and is managed by ADK itself.
+SESSION_DB_URL = "sqlite:///./adk_sessions.db"
+
+
 class ADKSessionManager:
     def __init__(self):
-        # One in-memory session service used ONLY per-request
-        self.session_service = InMemorySessionService()
+        # Persistent session service (sessions survive restarts)
+        self.session_service = DatabaseSessionService(db_url=SESSION_DB_URL)
 
-        # One runner per agent (primary / secondary)
+        # One runner per agent (primary / secondary), both sharing the same
+        # session_service so they can load and update sessions.
         self.primary_runner = Runner(
             agent=primary_agent,
-            app_name="CoffeeLM",
+            app_name=APP_NAME,
             session_service=self.session_service,
         )
 
         self.secondary_runner = Runner(
             agent=secondary_agent,
-            app_name="CoffeeLM",
+            app_name=APP_NAME,
             session_service=self.session_service,
         )
 
-    def _build_prompt_from_history(self, history: List[Dict[str, str]]) -> str:
+    # ------------------------------------------------------------------
+    # SESSION CREATION
+    # ------------------------------------------------------------------
+    def create_session(
+        self,
+        chat_type: Literal["primary", "secondary"],
+        user_id: str = "user",
+        initial_state: Optional[dict] = None,
+    ) -> str:
         """
-        Convert a list of {role, content} dicts into a plain-text prompt.
+        Create a new ADK session for a chat and return its session_id.
 
-        Example:
-        System: ...
-        User: ...
-        Assistant: ...
-        User: <latest question>
+        - chat_type: "primary" or "secondary" (used only to pick runner if needed).
+        - initial_state: dict that becomes session.state at creation time.
+          This is where we can inject things like a parent answer for secondary chats.
         """
-        lines = []
-        for msg in history:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
+        # We don't actually need the runner here to create a session; we just use
+        # the shared session_service.
+        session = self.session_service.create_session(
+            app_name=APP_NAME,
+            user_id=user_id,
+            state=initial_state or {},
+        )
+        return session.id
 
-            if role == "system":
-                prefix = "System"
-            elif role == "assistant":
-                prefix = "Assistant"
-            else:
-                prefix = "User"
-
-            lines.append(f"{prefix}: {content}")
-
-        return "\n".join(lines)
-
+    # ------------------------------------------------------------------
+    # MESSAGE SEND (STATEFUL)
+    # ------------------------------------------------------------------
     def send_message(
         self,
         chat_type: Literal["primary", "secondary"],
-        history: List[Dict[str, str]],
+        session_id: str,
+        text: str,
+        user_id: str = "user",
     ) -> str:
         """
-        Stateless call:
-        - history: list of dicts with ['role', 'content'] for this chat
-        - returns the assistant's reply text
+        Send a single user message into an EXISTING ADK session.
+
+        - chat_type: "primary" or "secondary" -> selects which agent/runner to use
+        - session_id: the ADK session ID stored in the Chat row
+        - text: the latest user message (not full history)
+
+        The Runner:
+        - Loads the session (events + state) from DatabaseSessionService.
+        - Appends this new user message as an event.
+        - Lets the agent respond.
+        - Saves updated events/state back to the DB automatically.
         """
 
-        if not history:
-            raise ValueError("History is empty; cannot send message to ADK.")
+        if not session_id:
+            raise ValueError("session_id is empty; each chat must have an ADK session ID.")
 
-        # Build combined prompt from entire history
-        full_prompt = self._build_prompt_from_history(history)
-
-        # Fresh session each call
-        session_id = str(uuid.uuid4())
-        user_id = "user"  # Later you can use real user IDs
-
-        # Create session with empty or minimal state
-        self.session_service.create_session(
-            app_name="CoffeeLM",
-            user_id=user_id,
-            session_id=session_id,
-            state={},
-        )
-
-        # Single user content containing full context
+        # Single user content representing ONLY the latest user message.
         msg = types.Content(
             role="user",
-            parts=[types.Part(text=full_prompt)],
+            parts=[types.Part(text=text)],
         )
 
         # Choose runner based on chat type
@@ -110,6 +118,7 @@ class ADKSessionManager:
 
         final_text = ""
 
+        # Run the agent in the context of this existing session
         for event in runner.run(
             user_id=user_id,
             session_id=session_id,
@@ -117,13 +126,16 @@ class ADKSessionManager:
         ):
             if event.is_final_response():
                 if event.content and event.content.parts:
-                    final_text = event.content.parts[0].text or ""
+                    part = event.content.parts[0]
+                    if part and part.text:
+                        final_text = part.text or ""
 
         if final_text:
             final_text = final_text.strip()
             # Remove agent prefixes if present
             for agent_name in ["primary_agent:", "secondary_agent:", "Assistant:"]:
-                if final_text.lower().startswith(agent_name):
+                lower_prefix = agent_name.lower()
+                if final_text.lower().startswith(lower_prefix):
                     final_text = final_text[len(agent_name):].strip()
 
         return final_text
