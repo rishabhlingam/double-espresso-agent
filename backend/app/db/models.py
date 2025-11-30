@@ -14,18 +14,12 @@ import enum
 
 from .base import Base
 
-
-# ----------------------------------------------------
 # Chat Type Enum
-# ----------------------------------------------------
 class ChatType(str, enum.Enum):
     primary = "primary"
     secondary = "secondary"
 
-
-# ----------------------------------------------------
 # Chat Model
-# ----------------------------------------------------
 class Chat(Base):
     __tablename__ = "chats"
 
@@ -53,25 +47,25 @@ class Chat(Base):
         back_populates="chat",
         cascade="all, delete-orphan",
         order_by="Message.id",
-        foreign_keys="Message.chat_id"       # <-- FIX
+        foreign_keys="Message.chat_id"
     )
 
-    # Link back to parent chat (only for secondary chats)
+    # Link back to parent chat (for secondary chats)
     parent_chat = relationship(
         "Chat",
         remote_side=[id],
         uselist=False
     )
 
-    # The message that created this secondary chat
+    # Message that created the secondary chat
     parent_message = relationship(
         "Message",
         uselist=False,
-        foreign_keys=[parent_message_id]     # <-- FIX
+        foreign_keys=[parent_message_id]
     )
 
 
-    # Only ONE secondary chat is allowed per parent message
+    # Only one secondary chat is allowed per parent message
     __table_args__ = (
         UniqueConstraint(
             "parent_message_id",
@@ -80,9 +74,7 @@ class Chat(Base):
     )
 
 
-# ----------------------------------------------------
 # Message Model
-# ----------------------------------------------------
 class Message(Base):
     __tablename__ = "messages"
 
@@ -98,5 +90,5 @@ class Message(Base):
     chat = relationship(
         "Chat",
         back_populates="messages",
-        foreign_keys=[chat_id]               # <-- FIX
+        foreign_keys=[chat_id]
     )

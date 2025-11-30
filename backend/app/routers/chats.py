@@ -10,10 +10,7 @@ from app.observability.metrics import inc
 router = APIRouter(prefix="/chats", tags=["chats"])
 adk_manager = ADKSessionManager()
 
-
-# ------------------------------------------------------
 # DB Dependency
-# ------------------------------------------------------
 def get_db():
     db = SessionLocal()
     try:
@@ -21,10 +18,7 @@ def get_db():
     finally:
         db.close()
 
-
-# ------------------------------------------------------
 # Create PRIMARY chat
-# ------------------------------------------------------
 @router.post("/", response_model=schemas.ChatRead)
 def create_primary_chat(
     db: Session = Depends(get_db),
@@ -57,10 +51,7 @@ def create_primary_chat(
 
     return chat
 
-
-# ------------------------------------------------------
 # Send a message
-# ------------------------------------------------------
 @router.post("/{chat_id}/messages", response_model=schemas.ChatRead)
 def send_message(
     chat_id: int,
@@ -81,7 +72,6 @@ def send_message(
 
     user_id = "user"
 
-    # Safety: create session if missing
     if not chat.adk_session_id:
         chat.adk_session_id = adk_manager.create_session(
             chat_type=chat.type.value,
@@ -106,7 +96,7 @@ def send_message(
     inc("messages.user")
     inc(f"messages.user.{chat.type.value}")
 
-    # Call ADK with THIS user's API key
+    # Call ADK with user's API key
     reply_text = adk_manager.send_message(
         chat_type=chat.type.value,
         session_id=chat.adk_session_id,
@@ -130,10 +120,7 @@ def send_message(
 
     return chat
 
-
-# ------------------------------------------------------
 # Get chat
-# ------------------------------------------------------
 @router.get("/{chat_id}", response_model=schemas.ChatRead)
 def get_chat(chat_id: int, db: Session = Depends(get_db)):
     chat = db.query(models.Chat).filter(models.Chat.id == chat_id).first()
@@ -141,10 +128,7 @@ def get_chat(chat_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Chat not found")
     return chat
 
-
-# ------------------------------------------------------
 # Create or get SECONDARY chat
-# ------------------------------------------------------
 @router.post("/fork", response_model=schemas.ChatRead)
 def create_or_get_secondary_chat(
     req: schemas.ForkRequest,
@@ -229,10 +213,7 @@ def create_or_get_secondary_chat(
     db.refresh(chat)
     return chat
 
-
-# ------------------------------------------------------
 # Get all chats
-# ------------------------------------------------------
 @router.get("/", response_model=List[schemas.ChatRead])
 def get_all_chats(db: Session = Depends(get_db)):
     return (
@@ -242,10 +223,7 @@ def get_all_chats(db: Session = Depends(get_db)):
         .all()
     )
 
-
-# ------------------------------------------------------
 # Metrics endpoint
-# ------------------------------------------------------
 @router.get("/metrics")
 def get_metrics_endpoint():
     from app.observability.metrics import get_metrics

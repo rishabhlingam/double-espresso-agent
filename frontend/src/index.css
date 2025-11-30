@@ -43,7 +43,7 @@ html, body, #root {
 .typing-dot {
   width: 0.45rem;
   height: 0.45rem;
-  background-color: #d1d5db; /* gray-300 */
+  background-color: #d1d5db;
   border-radius: 9999px;
   animation: typing 0.9s infinite ease-in-out;
 }
@@ -56,24 +56,20 @@ html, body, #root {
   animation-delay: 300ms;
 }
 
-/* ---------------------------- */
-/*   Coffee-Themed Scrollbar    */
-/* ---------------------------- */
-
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1c1514; /* roast */
+  background: #1c1514;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3b2e2c; /* foam */
+  background: #3b2e2c;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #b38b59; /* gold */
+  background: #b38b59;
 }

@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
 
-# Load .env first
 load_dotenv()
 
 from app.routers import chats

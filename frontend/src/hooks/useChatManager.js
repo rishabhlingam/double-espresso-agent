@@ -16,9 +16,7 @@ export function useChatManager() {
   const [primaryChat, setPrimaryChat] = useState(null);
   const [secondaryChat, setSecondaryChat] = useState(null);
 
-  // -----------------------------------------------------
   // Load chats on startup
-  // -----------------------------------------------------
   useEffect(() => {
     loadChats();
   }, []);
@@ -32,9 +30,7 @@ export function useChatManager() {
     }
   };
 
-  // -----------------------------------------------------
   // PRIMARY CHAT
-  // -----------------------------------------------------
   const loadChat = async (id) => {
     const chat = await getChat(id);
     setPrimaryChat(chat);
@@ -49,13 +45,11 @@ export function useChatManager() {
     setChats((prev) => [chat, ...prev]);
   };
 
-  // -----------------------------------------------------
   // SEND PRIMARY MESSAGE
-  // -----------------------------------------------------
   const sendPrimaryMessage = async (content) => {
     if (!primaryChat || !primaryChat.id) return;
 
-    // 1. Optimistic user message
+    // User message
     const userMsg = {
       id: -1,
       role: "user",
@@ -63,7 +57,7 @@ export function useChatManager() {
       created_at: new Date().toISOString(),
     };
 
-    // 2. Thinking placeholder
+    // Thinking placeholder
     const thinkingMsg = {
       id: -2,
       role: "assistant",
@@ -71,7 +65,7 @@ export function useChatManager() {
       isThinking: true,
     };
 
-    // Show user + thinking instantly
+    // Show user message
     setPrimaryChat((prev) => {
       if (!prev) return prev;
       const prevMessages = prev.messages || [];
@@ -81,11 +75,11 @@ export function useChatManager() {
       };
     });
 
-    // 3. Call backend
+    // Call backend
     const fullChat = await sendMessage(primaryChat.id, content);
     const realAssistant = fullChat.messages[fullChat.messages.length - 1];
 
-    // If backend returned no content, just replace instantly
+    // If backend returned no content, replace instantly
     if (!realAssistant || typeof realAssistant.content !== "string") {
       setPrimaryChat((prev) => {
         if (!prev || !prev.messages) return prev;
@@ -104,12 +98,12 @@ export function useChatManager() {
       return;
     }
 
-    // 4. Stream text into the thinking bubble
+    // Stream text into the thinking bubble
     simulateTyping(
       realAssistant.content,
       (partial) => {
         setPrimaryChat((prev) => {
-          if (!prev || !prev.messages) return prev; // <-- guard
+          if (!prev || !prev.messages) return prev; // guard
           return {
             ...prev,
             messages: prev.messages.map((m) =>
@@ -119,9 +113,9 @@ export function useChatManager() {
         });
       },
       () => {
-        // 5. Replace placeholder with real message
+        // Replace placeholder with real message
         setPrimaryChat((prev) => {
-          if (!prev || !prev.messages) return prev; // <-- guard
+          if (!prev || !prev.messages) return prev; // guard
           return {
             ...prev,
             messages: prev.messages.map((m) =>
@@ -130,7 +124,7 @@ export function useChatManager() {
           };
         });
 
-        // Update sidebar entry too
+        // Update sidebar entry
         setChats((prev) =>
           prev.map((c) => (c.id === fullChat.id ? fullChat : c))
         );
@@ -138,9 +132,7 @@ export function useChatManager() {
     );
   };
 
-  // -----------------------------------------------------
-  // SECONDARY CHAT (FORKED CHAT)
-  // -----------------------------------------------------
+  // SECONDARY CHAT
   const openFork = async (messageId) => {
     if (!primaryChat || !primaryChat.id) return;
 
@@ -151,7 +143,7 @@ export function useChatManager() {
   const sendSecondaryMessage = async (content) => {
     if (!secondaryChat || !secondaryChat.id) return;
 
-    // 1. Optimistic user msg
+    // User msg
     const userMsg = {
       id: -1,
       role: "user",
@@ -159,7 +151,7 @@ export function useChatManager() {
       created_at: new Date().toISOString(),
     };
 
-    // 2. Thinking placeholder
+    // Thinking placeholder
     const thinkingMsg = {
       id: -2,
       role: "assistant",
@@ -167,7 +159,7 @@ export function useChatManager() {
       isThinking: true,
     };
 
-    // Show user + thinking
+    // Show user message
     setSecondaryChat((prev) => {
       if (!prev) return prev;
       const prevMessages = prev.messages || [];
@@ -177,7 +169,7 @@ export function useChatManager() {
       };
     });
 
-    // 3. Call backend
+    // Call backend
     const fullChat = await sendMessage(secondaryChat.id, content);
     const realAssistant = fullChat.messages[fullChat.messages.length - 1];
 
@@ -195,12 +187,12 @@ export function useChatManager() {
       return;
     }
 
-    // 4. Stream into bubble
+    // Stream into bubble
     simulateTyping(
       realAssistant.content,
       (partial) => {
         setSecondaryChat((prev) => {
-          if (!prev || !prev.messages) return prev; // <-- guard
+          if (!prev || !prev.messages) return prev; // guard
           return {
             ...prev,
             messages: prev.messages.map((m) =>
@@ -211,7 +203,7 @@ export function useChatManager() {
       },
       () => {
         setSecondaryChat((prev) => {
-          if (!prev || !prev.messages) return prev; // <-- guard
+          if (!prev || !prev.messages) return prev; // guard
           return {
             ...prev,
             messages: prev.messages.map((m) =>
@@ -230,9 +222,7 @@ export function useChatManager() {
     setActiveChatId(null);
   };
 
-  // -----------------------------------------------------
   // Return everything UI needs
-  // -----------------------------------------------------
   return {
     chats,
     activeChatId,
@@ -252,9 +242,7 @@ export function useChatManager() {
   };
 }
 
-// -----------------------------------------------------
 // TYPING SIMULATION HELPER
-// -----------------------------------------------------
 function simulateTyping(fullText, updateChunk, onDone) {
   let i = 0;
 

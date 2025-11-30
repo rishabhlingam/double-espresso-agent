@@ -10,12 +10,12 @@ export default function PrimaryChat({
 }) {
   const bottomRef = useRef(null);
 
-  // Auto scroll to bottom whenever messages update
+  // Auto scroll to bottom
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat?.messages]);
 
-  // If no chat selected → Welcome screen
+  // If no chat selected show Welcome screen
   if (!chat) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-espresso text-cream px-6 text-center">

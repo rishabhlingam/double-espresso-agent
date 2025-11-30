@@ -5,12 +5,11 @@ from typing import Optional
 class Settings(BaseSettings):
     """
     Global application configuration.
-    Note:
-    - google_api_key is optional because in demo mode, users will provide 
-      their own API key via frontend.
+    Google_api_key is optional.
+    Users will provide own API key via frontend.
     """
 
-    # GOOGLE ADK (optional for demo mode)
+    # GOOGLE ADK (optional)
     google_api_key: Optional[str] = Field(
         None, 
         env="GOOGLE_API_KEY"
@@ -21,10 +20,10 @@ class Settings(BaseSettings):
         env="GOOGLE_GENAI_USE_VERTEXAI"
     )
 
-    # APP DATABASE (chat.db via SQLAlchemy)
+    # APP DATABASE
     database_url: str = Field(..., env="DATABASE_URL")
 
-    # ADK SESSION DATABASE (adk_sessions.db via DatabaseSessionService)
+    # ADK SESSION DATABASE
     adk_session_db_url: str = Field(
         "sqlite:///./adk_sessions.db",
         env="ADK_SESSION_DB_URL"
@@ -34,6 +33,4 @@ class Settings(BaseSettings):
         env_file = ".env"
         extra = "ignore"
 
-
-# Instantiate global settings
 settings = Settings()

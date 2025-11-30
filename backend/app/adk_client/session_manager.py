@@ -1,8 +1,3 @@
-"""
-ADK Session Manager (Stateful per chat)
----------------------------------------
-"""
-
 import logging
 import os
 from contextlib import contextmanager
@@ -26,13 +21,10 @@ logging.basicConfig(
 
 APP_NAME = "DoubleEspressoAgent"
 
-# ADK session storage DB (separate from chat.db)
+# ADK session storage Databse
 SESSION_DB_URL = settings.adk_session_db_url
 
-
-# ------------------------------------------------------------
-# NEW: Temporary override for GOOGLE_API_KEY (per request)
-# ------------------------------------------------------------
+# Temporary override for GOOGLE_API_KEY (per request)
 @contextmanager
 def temporary_google_api_key(api_key: str):
     """
@@ -57,7 +49,7 @@ class ADKSessionManager:
         # Persistent session service
         self.session_service = DatabaseSessionService(db_url=SESSION_DB_URL)
 
-        # Base runners (agents do NOT change, only the API key does)
+        # Base runners
         self.primary_runner = Runner(
             agent=primary_agent,
             app_name=APP_NAME,
@@ -70,22 +62,20 @@ class ADKSessionManager:
             session_service=self.session_service,
         )
 
-    # ------------------------------------------------------------------
     # SESSION CREATION
-    # ------------------------------------------------------------------
     def create_session(
         self,
         chat_type: Literal["primary", "secondary"],
         user_id: str = "user",
         initial_state: Optional[dict] = None,
-        api_key: Optional[str] = None,     # <── NEW
+        api_key: Optional[str] = None,
     ) -> str:
         """
         Creates a new ADK session and returns its session_id.
         """
         logger.info(f"[ADK] Creating session for chat_type={chat_type} user={user_id}")
 
-        # Creating session does NOT call Gemini, so api_key is optional.
+        # Creating session does NOT call Gemini. api_key is optional.
         session = self.session_service.create_session(
             app_name=APP_NAME,
             user_id=user_id,
@@ -95,16 +85,14 @@ class ADKSessionManager:
         logger.info(f"[ADK] New session created: session_id={session.id}")
         return session.id
 
-    # ------------------------------------------------------------------
-    # MESSAGE SEND (STATEFUL)
-    # ------------------------------------------------------------------
+    # MESSAGE SEND
     def send_message(
         self,
         chat_type: Literal["primary", "secondary"],
         session_id: str,
         text: str,
         user_id: str = "user",
-        api_key: Optional[str] = None,     # <── NEW
+        api_key: Optional[str] = None,
     ) -> str:
         """
         Sends a single user message into an EXISTING ADK session.
@@ -116,13 +104,12 @@ class ADKSessionManager:
         if not api_key:
             raise ValueError("Missing API key for ADK call")
 
-        # Only the newest user message is sent
         msg = types.Content(
             role="user",
             parts=[types.Part(text=text)],
         )
 
-        # Choose which agent runner to use
+        # Selecting appropiate agent based on request
         runner = (
             self.primary_runner if chat_type == "primary" else self.secondary_runner
         )
@@ -136,12 +123,9 @@ class ADKSessionManager:
         inc("agent.calls")
         inc(f"agent.calls.{chat_type}")
 
-        # -----------------------------------------------------------
-        # NEW: Run the LLM with THIS USER'S API KEY temporarily
-        # -----------------------------------------------------------
+        # Run the LLM with THIS USER'S API KEY temporarily
         with temporary_google_api_key(api_key):
-
-            # Run the agent within the session
+            
             for event in runner.run(
                 user_id=user_id,
                 session_id=session_id,

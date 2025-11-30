@@ -2,11 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, ConfigDict
 
-
-# ----------------------------------------------------------
 # MESSAGE SCHEMAS
-# ----------------------------------------------------------
-
 class MessageBase(BaseModel):
     role: str
     content: str
@@ -23,11 +19,7 @@ class MessageRead(MessageBase):
 
     model_config = ConfigDict(from_attributes=True)
 
-
-# ----------------------------------------------------------
 # CHAT SCHEMAS
-# ----------------------------------------------------------
-
 class ChatBase(BaseModel):
     type: str
     parent_chat_id: Optional[int] = None
@@ -44,11 +36,7 @@ class ChatRead(ChatBase):
 
     model_config = ConfigDict(from_attributes=True)
 
-
-# ----------------------------------------------------------
 # FORK REQUEST SCHEMA
-# ----------------------------------------------------------
-
 class ForkRequest(BaseModel):
     parent_chat_id: int
     parent_message_id: int

@@ -8,11 +8,11 @@ export default function ChatListSidebar({
   // Only primary chats
   const primaryChats = chats.filter((c) => c.type === "primary");
 
-  // ---- END SESSION (clear API key + chats) ----
+  // END SESSION (clear API key and chats)
   const endSession = () => {
     if (window.confirm("End session and clear your API key?")) {
       sessionStorage.removeItem("google_api_key");
-      sessionStorage.removeItem("activeChatId"); // optional
+      sessionStorage.removeItem("activeChatId");
       window.location.reload();
     }
   };
@@ -72,7 +72,7 @@ export default function ChatListSidebar({
         })}
       </div>
 
-      {/* ---- END SESSION BUTTON AT BOTTOM ---- */}
+      {/* END SESSION BUTTON AT BOTTOM */}
       <button
         onClick={endSession}
         className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm transition"

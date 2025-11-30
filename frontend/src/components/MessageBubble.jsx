@@ -17,9 +17,7 @@ export default function MessageBubble({
     navigator.clipboard.writeText(content);
   };
 
-  // ----------------------------------------------------------
   // THINKING BUBBLE
-  // ----------------------------------------------------------
   if (isThinking) {
     return (
       <div className="flex justify-start">
@@ -43,9 +41,7 @@ export default function MessageBubble({
     );
   }
 
-  // ----------------------------------------------------------
   // NORMAL BUBBLE
-  // ----------------------------------------------------------
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
@@ -62,7 +58,7 @@ export default function MessageBubble({
           <ReactMarkdown>{content}</ReactMarkdown>
         </div>
 
-        {/* DRILL DOWN BUTTON (assistant only, not secondary) */}
+        {/* DRILL DOWN BUTTON (not for secondary) */}
         {isAssistant && !isSecondary && id > 0 && (
           <button
             onClick={onDrillDown}
