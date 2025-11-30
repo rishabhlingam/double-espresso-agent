@@ -55,3 +55,25 @@ html, body, #root {
 .animation-delay-300 {
   animation-delay: 300ms;
 }
+
+/* ---------------------------- */
+/*   Coffee-Themed Scrollbar    */
+/* ---------------------------- */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1c1514; /* roast */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3b2e2c; /* foam */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b38b59; /* gold */
+}

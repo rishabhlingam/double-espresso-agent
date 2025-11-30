@@ -1,5 +1,6 @@
 import MessageBubble from "./MessageBubble";
 import { useEffect, useRef } from "react";
+import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 
 export default function PrimaryChat({
   chat,
@@ -72,8 +73,10 @@ export default function PrimaryChat({
           placeholder="Brew your message…"
         />
 
-        <button className="px-6 py-3 bg-caramel text-espresso rounded-xl hover:bg-gold transition">
-          Send
+        <button
+        className="p-3 bg-caramel text-espresso rounded-xl hover:bg-gold transition flex items-center justify-center"
+        >
+          <PaperAirplaneIcon className="w-5 h-5 text-espresso" />
         </button>
       </form>
 

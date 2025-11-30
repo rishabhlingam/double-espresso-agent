@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import MessageBubble from "./MessageBubble";
+import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 
 export default function SecondaryChatOverlay({ chat, onSend, onClose }) {
   const bottomRef = useRef(null);
@@ -83,8 +84,10 @@ export default function SecondaryChatOverlay({ chat, onSend, onClose }) {
             placeholder="Ask further…"
           />
 
-          <button className="px-6 py-3 bg-caramel text-espresso rounded-xl hover:bg-gold transition">
-            Send
+          <button
+          className="p-3 bg-caramel text-espresso rounded-xl hover:bg-gold transition flex items-center justify-center"
+          >
+            <PaperAirplaneIcon className="w-5 h-5 text-espresso" />
           </button>
         </form>
       </div>
