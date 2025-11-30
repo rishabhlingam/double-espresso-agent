@@ -33,7 +33,7 @@ export default function App() {
 
   // Load API key on startup
   useEffect(() => {
-    const stored = localStorage.getItem("google_api_key");
+    const stored = sessionStorage.getItem("google_api_key");
     if (stored) setApiKey(stored);
   }, []);
 

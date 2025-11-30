@@ -13,8 +13,8 @@ export default function EnterApiKey({ onApiKeySaved }) {
       return;
     }
 
-    // Save to localStorage
-    localStorage.setItem("google_api_key", trimmed);
+    // Save to sessionStorage
+    sessionStorage.setItem("google_api_key", trimmed);
 
     // Clear error and notify App.jsx
     setError("");
@@ -30,10 +30,10 @@ export default function EnterApiKey({ onApiKeySaved }) {
         </h1>
 
         <p className="text-latte text-sm mb-6 text-center leading-relaxed">
-          This demo uses your own Google Gemini API key.
-          <br />
-          Your key is <span className="text-caramel">never sent anywhere</span>
-          except your browser → backend → Gemini.
+            This demo uses your own Google Gemini API key.
+            <br />
+            Your key is <span className="text-caramel">stored only in your browser’s session storage </span>
+            and is automatically deleted when the tab is closed.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -41,7 +41,7 @@ export default function EnterApiKey({ onApiKeySaved }) {
             type="password"
             className="w-full p-3 rounded-md bg-foam text-espresso placeholder-latte
                        border border-mocha focus:ring-2 focus:ring-caramel outline-none"
-            placeholder="GOOGLE_API_KEY"
+            placeholder="GOOGLE API KEY"
             value={key}
             onChange={(e) => setKey(e.target.value)}
           />

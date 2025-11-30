@@ -11,8 +11,8 @@ export default function ChatListSidebar({
   // ---- END SESSION (clear API key + chats) ----
   const endSession = () => {
     if (window.confirm("End session and clear your API key?")) {
-      localStorage.removeItem("google_api_key");
-      localStorage.removeItem("activeChatId"); // optional
+      sessionStorage.removeItem("google_api_key");
+      sessionStorage.removeItem("activeChatId"); // optional
       window.location.reload();
     }
   };

@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Helper to get user-provided API key from browser storage
 function getApiKey() {
-  return localStorage.getItem("google_api_key") || "";
+  return sessionStorage.getItem("google_api_key") || "";
 }
 
 // Axios instance
