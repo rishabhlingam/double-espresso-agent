@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import TypingDots from "./TypingDots";
+import { ClipboardIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 export default function MessageBubble({
   id,
@@ -11,6 +12,10 @@ export default function MessageBubble({
 }) {
   const isUser = role === "user";
   const isAssistant = role === "assistant";
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(content);
+  };
 
   // ----------------------------------------------------------
   // THINKING BUBBLE
@@ -63,9 +68,19 @@ export default function MessageBubble({
             onClick={onDrillDown}
             className="text-xs text-gold mt-1 hover:underline"
           >
-            Drill down →
+            <MagnifyingGlassIcon className="w-4 h-4" />
           </button>
         )}
+
+        {isAssistant && (
+          <button
+          onClick={handleCopy}
+          className="text-xs text-latte mt-1 ml-2 hover:text-gold transition"
+          >
+            <ClipboardIcon className="w-4 h-4" />
+          </button>
+        )}
+
       </div>
     </div>
   );
