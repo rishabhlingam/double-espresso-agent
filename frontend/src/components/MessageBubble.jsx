@@ -72,6 +72,7 @@ export default function MessageBubble({
           </button>
         )}
 
+        {/* Copy text */}
         {isAssistant && (
           <button
           onClick={handleCopy}

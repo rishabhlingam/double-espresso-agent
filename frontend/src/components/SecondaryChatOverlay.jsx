@@ -37,7 +37,7 @@ export default function SecondaryChatOverlay({ chat, onSend, onClose }) {
 
         {/* Header */}
         <div className="p-4 border-b border-espresso flex justify-between items-center bg-roast">
-          <div className="text-lg font-semibold text-cream">Forked Chat</div>
+          <div className="text-lg font-semibold text-cream">Deep Brew</div>
           <button
             className="text-2xl text-cream hover:text-gold transition"
             onClick={handleClose}
