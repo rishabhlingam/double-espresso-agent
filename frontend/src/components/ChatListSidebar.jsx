@@ -8,18 +8,27 @@ export default function ChatListSidebar({
   // Only primary chats
   const primaryChats = chats.filter((c) => c.type === "primary");
 
+  // ---- END SESSION (clear API key + chats) ----
+  const endSession = () => {
+    if (window.confirm("End session and clear your API key?")) {
+      localStorage.removeItem("google_api_key");
+      localStorage.removeItem("activeChatId"); // optional
+      window.location.reload();
+    }
+  };
+
   return (
     <div className="w-64 bg-roast text-cream border-r border-espresso p-4 flex flex-col">
 
       {/* Project Title */}
       <div className="mb-6">
         <div
-        onClick={goHome}
-        className="text-xl font-semibold text-cream cursor-pointer hover:text-gold transition"
+          onClick={goHome}
+          className="text-xl font-semibold text-cream cursor-pointer hover:text-gold transition"
         >
           Double Espresso Agent
-          </div>
-</div>
+        </div>
+      </div>
 
       {/* New Chat Button */}
       <button
@@ -32,19 +41,17 @@ export default function ChatListSidebar({
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto space-y-1">
-
         {primaryChats.length === 0 && (
           <div className="text-latte text-sm">No chats yet. Start one!</div>
         )}
 
         {primaryChats.map((chat) => {
-          // Find the first user message
           const firstUserMessage = chat.messages?.find(
             (m) => m.role === "user"
           )?.content;
 
           const preview = firstUserMessage
-            ? firstUserMessage.split("\n")[0].slice(0, 60) // limit preview length
+            ? firstUserMessage.split("\n")[0].slice(0, 60)
             : "New Chat";
 
           return (
@@ -64,6 +71,14 @@ export default function ChatListSidebar({
           );
         })}
       </div>
+
+      {/* ---- END SESSION BUTTON AT BOTTOM ---- */}
+      <button
+        onClick={endSession}
+        className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm transition"
+      >
+        End Session
+      </button>
     </div>
   );
 }
