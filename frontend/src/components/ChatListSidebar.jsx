@@ -3,17 +3,28 @@ export default function ChatListSidebar({
   chats,
   activeChatId,
   onSelectChat,
+  goHome,
 }) {
   // Only primary chats
   const primaryChats = chats.filter((c) => c.type === "primary");
 
   return (
-    <div className="w-64 bg-gray-950 text-white border-r border-gray-800 p-4 flex flex-col">
+    <div className="w-64 bg-roast text-cream border-r border-espresso p-4 flex flex-col">
+
+      {/* Project Title */}
+      <div className="mb-6">
+        <div
+        onClick={goHome}
+        className="text-xl font-semibold text-cream cursor-pointer hover:text-gold transition"
+        >
+          Double Espresso Agent
+          </div>
+</div>
 
       {/* New Chat Button */}
       <button
-        className="px-4 py-3 bg-blue-600 rounded-lg mb-6 text-left font-medium
-                   hover:bg-blue-700 transition"
+        className="px-4 py-3 bg-caramel text-espresso rounded-lg mb-6 text-left font-medium
+                   hover:bg-gold transition"
         onClick={startNewChat}
       >
         + New Chat
@@ -23,7 +34,7 @@ export default function ChatListSidebar({
       <div className="flex-1 overflow-y-auto space-y-1">
 
         {primaryChats.length === 0 && (
-          <div className="text-gray-400 text-sm">No chats yet. Start one!</div>
+          <div className="text-latte text-sm">No chats yet. Start one!</div>
         )}
 
         {primaryChats.map((chat) => {
@@ -43,8 +54,8 @@ export default function ChatListSidebar({
               className={`w-full text-left px-3 py-2 rounded-md text-sm truncate transition
                 ${
                   chat.id === activeChatId
-                    ? "bg-gray-800 text-white"
-                    : "text-gray-300 hover:bg-gray-800/70"
+                    ? "bg-mocha text-cream"
+                    : "text-latte hover:bg-foam/50"
                 }
               `}
             >

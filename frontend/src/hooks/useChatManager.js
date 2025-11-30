@@ -225,6 +225,11 @@ export function useChatManager() {
 
   const closeSecondary = () => setSecondaryChat(null);
 
+  const goHome = () => {
+    setPrimaryChat(null);
+    setActiveChatId(null);
+  };
+
   // -----------------------------------------------------
   // Return everything UI needs
   // -----------------------------------------------------
@@ -242,6 +247,8 @@ export function useChatManager() {
     openFork,
     sendSecondaryMessage,
     closeSecondary,
+
+    goHome,
   };
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import MessageBubble from "./MessageBubble";
+import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 
 export default function SecondaryChatOverlay({ chat, onSend, onClose }) {
   const bottomRef = useRef(null);
@@ -10,7 +11,7 @@ export default function SecondaryChatOverlay({ chat, onSend, onClose }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat?.messages]);
 
-  // Close on ESC
+  // ESC closes overlay
   useEffect(() => {
     const handler = (e) => {
       if (e.key === "Escape") handleClose();
@@ -21,25 +22,24 @@ export default function SecondaryChatOverlay({ chat, onSend, onClose }) {
 
   const handleClose = () => {
     setClosing(true);
-    setTimeout(onClose, 250); // wait for closing animation
+    setTimeout(onClose, 250); // wait for animation to finish
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-end z-50">
+    <div className="fixed inset-0 bg-espresso/70 backdrop-blur-sm flex justify-end z-50">
       <div
         className={`
-          h-full bg-gray-900 text-white flex flex-col border-l border-gray-800 shadow-xl
-          w-[78%]                /* <--- wider panel (almost full) */
-          max-w-[900px]          /* <--- optional max width */
+          h-full bg-mocha text-cream flex flex-col border-l border-espresso shadow-xl
+          w-[78%] max-w-[900px]
           ${closing ? "animate-slide-out" : "animate-slide-in"}
         `}
       >
 
         {/* Header */}
-        <div className="p-4 border-b border-gray-800 flex justify-between items-center">
-          <div className="text-lg font-semibold text-gray-200">Forked Chat</div>
+        <div className="p-4 border-b border-espresso flex justify-between items-center bg-roast">
+          <div className="text-lg font-semibold text-cream">Deep Brew</div>
           <button
-            className="text-2xl hover:text-gray-400"
+            className="text-2xl text-cream hover:text-gold transition"
             onClick={handleClose}
           >
             ×
@@ -47,16 +47,16 @@ export default function SecondaryChatOverlay({ chat, onSend, onClose }) {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2 bg-mocha">
           {(chat?.messages || [])
-            .filter((m) => m.role !== "system")      // hide system prompt
+            .filter((m) => m.role !== "system")
             .map((m) => (
               <MessageBubble
                 key={m.id}
                 id={m.id}
                 role={m.role}
                 content={m.content}
-                isSecondary={true}                  // hides drill-down
+                isSecondary={true}
                 isThinking={m.isThinking === true}
               />
             ))}
@@ -65,25 +65,29 @@ export default function SecondaryChatOverlay({ chat, onSend, onClose }) {
 
         {/* Input */}
         <form
-          autoComplete="off"                        // prevent prompt history
+          autoComplete="off"
           onSubmit={(e) => {
             e.preventDefault();
             const text = e.target.msg.value;
             if (text.trim()) onSend(text);
             e.target.reset();
           }}
-          className="p-4 border-t border-gray-800 flex gap-3"
+          className="p-4 border-t border-espresso flex gap-3 bg-roast"
         >
           <input
             name="msg"
             autoComplete="off"
-            className="flex-1 p-3 rounded-xl bg-gray-800 text-white
-                       focus:ring-2 focus:ring-blue-600 outline-none"
+            className="
+              flex-1 p-3 rounded-xl bg-foam text-cream placeholder-latte
+              focus:ring-2 focus:ring-caramel outline-none
+            "
             placeholder="Ask further…"
           />
 
-          <button className="px-6 py-3 bg-blue-600 rounded-xl hover:bg-blue-700 transition">
-            Send
+          <button
+          className="p-3 bg-caramel text-espresso rounded-xl hover:bg-gold transition flex items-center justify-center"
+          >
+            <PaperAirplaneIcon className="w-5 h-5 text-espresso" />
           </button>
         </form>
       </div>
