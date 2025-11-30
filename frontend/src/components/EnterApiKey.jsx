@@ -18,9 +18,13 @@ export default function EnterApiKey({ onApiKeySaved }) {
   return (
     <div className="bg-roast p-8 rounded-xl shadow-xl w-full max-w-md text-cream">
 
-      <h1 className="text-2xl font-semibold mb-4 text-center">
-        Enter Your Google API Key
+      <h1 className="text-center text-xl font-bold mb-2 text-caramel">
+        Double Espresso Agent ☕
       </h1>
+
+      <h2 className="text-2xl font-semibold mb-4 text-center">
+        Enter Your Google API Key
+      </h2>
 
       <p className="text-latte text-sm mb-6 text-center leading-relaxed">
         This demo uses your own Google Gemini API key.

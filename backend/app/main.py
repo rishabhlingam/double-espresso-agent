@@ -13,7 +13,11 @@ from app.db.base import engine, Base
 # Create DB tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(
+    title="Double Espresso Agent",
+    description="A multi-agent conversational assistant powered by Google ADK.",
+    version="1.0.0",
+)
 
 # CORS
 app.add_middleware(

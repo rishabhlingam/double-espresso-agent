@@ -24,7 +24,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
-APP_NAME = "CoffeeLM"
+APP_NAME = "DoubleEspressoAgent"
 
 # ADK session storage DB (separate from chat.db)
 SESSION_DB_URL = settings.adk_session_db_url
