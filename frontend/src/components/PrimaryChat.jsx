@@ -14,12 +14,16 @@ export default function PrimaryChat({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat?.messages]);
 
-  // If no chat selected
+  // If no chat selected → Welcome screen
   if (!chat) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-900 text-white">
+      <div className="flex-1 flex flex-col items-center justify-center bg-espresso text-cream px-6 text-center">
+        <h1 className="text-3xl font-bold mb-4">Welcome to Double Espresso Agent</h1>
+        <p className="text-latte text-lg mb-6">
+          Your intelligent multi-agent assistant. Start a new chat to begin.
+        </p>
         <button
-          className="px-6 py-3 bg-blue-600 rounded-lg text-lg"
+          className="px-6 py-3 bg-caramel text-espresso rounded-lg text-lg hover:bg-gold transition"
           onClick={onStartNewChat}
         >
           Start New Chat
@@ -31,10 +35,10 @@ export default function PrimaryChat({
   const messages = chat.messages || [];
 
   return (
-    <div className="flex flex-col flex-1 bg-gray-900 text-white">
+    <div className="flex flex-col flex-1 bg-espresso text-cream">
 
       {/* Messages list */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2 bg-espresso">
         {messages.map((m) => (
           <MessageBubble
             key={m.id}
@@ -51,24 +55,24 @@ export default function PrimaryChat({
 
       {/* Input box */}
       <form
-        autoComplete="off"           // <--- disables unwanted browser suggestions
+        autoComplete="off"
         onSubmit={(e) => {
           e.preventDefault();
           const text = e.target.msg.value;
           if (text.trim()) onSend(text);
           e.target.reset();
         }}
-        className="p-4 border-t border-gray-800 flex gap-3 bg-gray-900"
+        className="p-4 border-t border-mocha flex gap-3 bg-mocha"
       >
         <input
           name="msg"
-          autoComplete="off"         // <--- double safety
-          className="flex-1 p-3 rounded-xl bg-gray-800 text-white
-                     focus:ring-2 focus:ring-blue-600 outline-none"
-          placeholder="Message CoffeeLM…"
+          autoComplete="off"
+          className="flex-1 p-3 rounded-xl bg-foam text-cream placeholder-latte
+                     focus:ring-2 focus:ring-caramel outline-none"
+          placeholder="Brew your message…"
         />
 
-        <button className="px-6 py-3 bg-blue-600 rounded-xl hover:bg-blue-700 transition">
+        <button className="px-6 py-3 bg-caramel text-espresso rounded-xl hover:bg-gold transition">
           Send
         </button>
       </form>

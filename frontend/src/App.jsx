@@ -24,7 +24,7 @@ export default function App() {
   } = useChatManager();
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white relative">
+    <div className="flex h-screen bg-espresso text-cream relative">
       {/* Sidebar */}
       <ChatListSidebar
         startNewChat={startNewChat}
