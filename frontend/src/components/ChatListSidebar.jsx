@@ -3,6 +3,7 @@ export default function ChatListSidebar({
   chats,
   activeChatId,
   onSelectChat,
+  goHome,
 }) {
   // Only primary chats
   const primaryChats = chats.filter((c) => c.type === "primary");
@@ -11,9 +12,14 @@ export default function ChatListSidebar({
     <div className="w-64 bg-roast text-cream border-r border-espresso p-4 flex flex-col">
 
       {/* Project Title */}
-      <div className="mb-4">
-        <h1 className="text-xl font-semibold text-cream">Double Espresso Agent</h1>
-      </div>
+      <div className="mb-6">
+        <div
+        onClick={goHome}
+        className="text-xl font-semibold text-cream cursor-pointer hover:text-gold transition"
+        >
+          Double Espresso Agent
+          </div>
+</div>
 
       {/* New Chat Button */}
       <button

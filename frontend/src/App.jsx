@@ -21,6 +21,8 @@ export default function App() {
 
     openFork,
     closeSecondary,
+
+    goHome,
   } = useChatManager();
 
   return (
@@ -31,6 +33,7 @@ export default function App() {
         chats={chats}
         activeChatId={activeChatId}
         onSelectChat={loadChat}
+        goHome={goHome}
       />
 
       {/* Primary Chat */}
