@@ -36,12 +36,13 @@ from google.genai import types
 from app.observability.metrics import inc
 from .agents import primary_agent, secondary_agent
 
+from app.config import settings
 
 APP_NAME = "CoffeeLM"
 
 # ADK will store its own session tables here.
 # This is separate from your SQLAlchemy chat.db and is managed by ADK itself.
-SESSION_DB_URL = "sqlite:///./adk_sessions.db"
+SESSION_DB_URL = settings.adk_session_db_url
 
 
 class ADKSessionManager:
