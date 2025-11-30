@@ -17,6 +17,15 @@ For SECONDARY chats:
     state["secondary:parent_answer"] = <parent_msg.content>
 - The secondary agent instruction uses {secondary:parent_answer} templating.
 """
+import logging
+
+logger = logging.getLogger("adk")
+logger.setLevel(logging.INFO)
+
+logging.basicConfig(
+    level=logging.INFO, 
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 from typing import Literal, Optional
 
@@ -24,6 +33,7 @@ from google.adk.runners import Runner
 from google.adk.sessions import DatabaseSessionService
 from google.genai import types
 
+from app.observability.metrics import inc
 from .agents import primary_agent, secondary_agent
 
 
@@ -69,6 +79,7 @@ class ADKSessionManager:
         - initial_state: dict that becomes session.state at creation time.
           This is where we can inject things like a parent answer for secondary chats.
         """
+        logger.info(f"[ADK] Creating session for chat_type={chat_type} user={user_id}")
         # We don't actually need the runner here to create a session; we just use
         # the shared session_service.
         session = self.session_service.create_session(
@@ -76,6 +87,7 @@ class ADKSessionManager:
             user_id=user_id,
             state=initial_state or {},
         )
+        logger.info(f"[ADK] New session created: session_id={session.id}")
         return session.id
 
     # ------------------------------------------------------------------
@@ -118,12 +130,25 @@ class ADKSessionManager:
 
         final_text = ""
 
+        logger.info(
+            f"[ADK] Sending message to {chat_type}_agent | session={session_id} | text={text[:80]}"
+            )
+        
+        inc("agent.calls")
+        inc(f"agent.calls.{chat_type}")
         # Run the agent in the context of this existing session
         for event in runner.run(
             user_id=user_id,
             session_id=session_id,
             new_message=msg,
         ):
+            logger.info(
+                "[ADK EVENT] id=%s author=%s partial=%s is_final=%s",
+                event.id,
+                event.author,
+                event.partial,
+                event.is_final_response(),
+            )
             if event.is_final_response():
                 if event.content and event.content.parts:
                     part = event.content.parts[0]
@@ -138,4 +163,7 @@ class ADKSessionManager:
                 if final_text.lower().startswith(lower_prefix):
                     final_text = final_text[len(agent_name):].strip()
 
+        logger.info(
+            f"[ADK] Final response from {chat_type}_agent | session={session_id} | reply={final_text[:80]}"
+            )
         return final_text

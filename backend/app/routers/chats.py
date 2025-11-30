@@ -6,6 +6,7 @@ from app.db.base import SessionLocal
 from app.db import models, schemas
 from app.adk_client.session_manager import ADKSessionManager
 
+from app.observability.metrics import inc
 
 router = APIRouter(prefix="/chats", tags=["chats"])
 adk_manager = ADKSessionManager()
@@ -109,6 +110,9 @@ def send_message(
     db.commit()
     db.refresh(user_msg)
 
+    inc("messages.user") 
+    inc(f"messages.user.{chat.type.value}") 
+
     # 2) Call ADK with ONLY the latest user message,
     #    letting the session carry context via events/state.
     reply_text = adk_manager.send_message(
@@ -126,8 +130,11 @@ def send_message(
     )
     db.add(assistant_msg)
     db.commit()
-
     db.refresh(chat)
+
+    inc("messages.assistant")
+    inc(f"messages.assistant.{chat.type.value}")
+
     return chat
 
 
@@ -254,3 +261,8 @@ def get_all_chats(db: Session = Depends(get_db)):
         .order_by(models.Chat.id.desc())
         .all()
     )
+
+@router.get("/metrics")
+def get_metrics_endpoint():
+    from app.observability.metrics import get_metrics
+    return get_metrics()
