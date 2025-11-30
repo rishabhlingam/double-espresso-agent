@@ -37,37 +37,49 @@ export default function App() {
     if (stored) setApiKey(stored);
   }, []);
 
-  // Gate UI AFTER calling hooks (avoid hook order change)
-  if (!apiKey) {
-    return <EnterApiKey onApiKeySaved={setApiKey} />;
-  }
+  // We never early-return EnterApiKey — we overlay it instead
+  const isApiKeyMissing = !apiKey;
 
   return (
-    <div className="flex h-screen bg-espresso text-cream relative">
-      {/* Sidebar */}
-      <ChatListSidebar
-        startNewChat={startNewChat}
-        chats={chats}
-        activeChatId={activeChatId}
-        onSelectChat={loadChat}
-        goHome={goHome}
-      />
+    <div className="relative h-screen w-screen overflow-hidden">
 
-      {/* Primary Chat */}
-      <PrimaryChat
-        chat={primaryChat}
-        onSend={sendPrimaryMessage}
-        onDrillDown={openFork}
-        onStartNewChat={startNewChat}
-      />
+      {/* ---- MAIN APP UI (always rendered, blurred if no API key) ---- */}
+      <div
+        className={`h-full transition-all duration-300 ${
+          isApiKeyMissing ? "filter blur-md pointer-events-none" : ""
+        }`}
+      >
+        <div className="flex h-full bg-espresso text-cream relative">
+          <ChatListSidebar
+            startNewChat={startNewChat}
+            chats={chats}
+            activeChatId={activeChatId}
+            onSelectChat={loadChat}
+            goHome={goHome}
+          />
 
-      {/* Secondary Overlay */}
-      {secondaryChat && (
-        <SecondaryChatOverlay
-          chat={secondaryChat}
-          onSend={sendSecondaryMessage}
-          onClose={closeSecondary}
-        />
+          <PrimaryChat
+            chat={primaryChat}
+            onSend={sendPrimaryMessage}
+            onDrillDown={openFork}
+            onStartNewChat={startNewChat}
+          />
+
+          {secondaryChat && (
+            <SecondaryChatOverlay
+              chat={secondaryChat}
+              onSend={sendSecondaryMessage}
+              onClose={closeSecondary}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* ---- API KEY MODAL OVERLAY ---- */}
+      {isApiKeyMissing && (
+        <div className="absolute inset-0 flex justify-center items-center bg-black/40 backdrop-blur-sm z-10">
+          <EnterApiKey onApiKeySaved={setApiKey} />
+        </div>
       )}
     </div>
   );
