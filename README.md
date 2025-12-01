@@ -1,4 +1,4 @@
-# **Double Espresso Agent** ☕☕
+# **Double Espresso Agent**
 
 ## **Problem Statement**
 
@@ -12,72 +12,188 @@ Double Espresso Agent introduces a branching conversation experience that aligns
 
 # **Technical Architecture**
 
+![Backend Architecture](./assets/architecture.png)
+
 Double Espresso Agent is implemented as a two-layer system: a backend centered around Google ADK and persistent session storage, and a minimal React frontend that communicates via HTTP REST. The emphasis of the project is on the backend, where the orchestration, session management, and multi-agent logic reside.
 
-The application is built using **Python 3.12**, **FastAPI**, **SQLAlchemy 2.0**, and **google-adk 0.3**. The system uses two persistent databases: `chat.db` for application-level chat and message storage, and `adk_sessions.db` for all ADK-managed session transcripts. This separation allows the application to maintain its own structured chat state while delegating LLM conversation history, state, and rehydration logic to Google ADK’s database session service.
+The application is built using **Python 3.12**, **FastAPI**, **SQLAlchemy 2.0**, and **google-adk 0.3**. The system uses two persistent databases: `chat.db` for application-level chat and message storage, and `adk_sessions.db` for all ADK-managed session transcripts.
 
-### **Multi-Agent Design**
+---
 
-Two agents are defined in `agents.py` :
+## **Multi-Agent Design**
 
-* **Primary Agent**
-  A general conversational assistant with concise, structured response behavior. It handles the main linear conversation.
+Two agents are defined in `agents.py`:
 
-* **Secondary Agent**
-  A clarification-focused agent that is activated whenever the user forks a message. It receives the parent message explicitly as contextual input, ensuring that explanations remain anchored to that specific point rather than the broader chat history.
+### **Primary Agent**
+
+A general conversational assistant with concise, structured response behavior. It handles the main linear conversation.
+
+### **Secondary Agent**
+
+A clarification-focused agent that activates whenever the user forks a message. It receives the parent message explicitly as contextual input, ensuring that explanations remain anchored to that specific point rather than the broader conversation.
 
 Both agents use **Gemini 2.0 Flash** and are orchestrated through ADK runners.
 
-### **ADK Session Management**
+---
 
-The core orchestration is implemented in `session_manager.py` , which encapsulates:
+## **ADK Session Management**
 
-* Creation of new ADK sessions for primary or secondary chats
-* Long-term session persistence through `DatabaseSessionService`
+Core orchestration is implemented in `session_manager.py`, which handles:
+
+* Creating new ADK sessions for primary or secondary chats
+* Long-term session persistence via `DatabaseSessionService`
 * Temporary per-request API key injection
-* Running LLM calls through ADK’s event-streaming interface
-* Extracting final responses from streamed events
-* Session rehydration and continuation across multiple messages
+* LLM execution through ADK’s event-streaming system
+* Extracting final messages from streamed ADK events
+* Session rehydration across user messages
 
-Each chat record in the application database stores its associated ADK session ID, guaranteeing that every new message re-enters the exact same agent context maintained by ADK. This ensures deterministic continuation, stable memory, and coherent multi-turn reasoning.
+Each chat entry stores an associated ADK session ID, ensuring deterministic continuation and stable conversation memory.
 
-### **Database Schema**
+---
 
-SQLAlchemy models are defined in `models.py`  with corresponding Pydantic schemas in `schemas.py` . The schema includes:
+## **Database Schema**
 
-* **Chat Model**
-  Contains chat type (primary or secondary), optional parent message, and a foreign-key reference to the ADK session ID.
+SQLAlchemy models in `models.py` and Pydantic schemas in `schemas.py` define:
 
-* **Message Model**
-  Stores each user or assistant message with timestamps and direct chat linkage.
+### **Chat Model**
 
-The design ensures that primary and secondary chats remain structurally connected, while message-level forking is enforced through a uniqueness constraint on secondary chats per parent message.
+Stores chat type (primary/secondary), parent references, and ADK session linkage.
 
-The database engine and session factories are configured in `base.py` .
+### **Message Model**
 
+Stores each message with role, content, and timestamp.
 
-### **Observability**
+A uniqueness constraint ensures only one secondary chat is created per parent message.
 
-Observability is integrated at multiple layers:
+---
 
-* All ADK events (partial and final) are logged with identifiers, authorship, and content.
-* Metrics counters (e.g., `agent.calls`, `agent.calls.primary`, `agent.calls.secondary`) provide insight into system usage.
-* Runner events expose timing, event flow, and model behavior for debugging and performance analysis.
+## **Observability**
 
-This instrumentation allows the system to be monitored in real time and provides a foundation for future performance dashboards.
+Instrumentation includes:
+
+* Complete logging of ADK event flow
+* Metrics counters such as `agent.calls`, `agent.calls.primary`, and `agent.calls.secondary`
+* Timing and event sequence visibility for debugging and performance analysis
+
+These metrics are used to monitor both agent behavior and system health.
 
 ---
 
 # **Frontend Overview**
 
-The frontend, built with **React + Vite + Tailwind**, is intentionally light. It communicates exclusively over REST and maintains no internal LLM logic. The primary functionality is implemented in `useChatManager.js` , which handles chat loading, message posting, forking, and the simulation of incremental typing for assistant responses. All API calls are centralized in `api/chats.js` , which attaches the user-provided Gemini API key to each request.
+The frontend (React + Vite + Tailwind) communicates exclusively through REST.
+The main logic resides in `useChatManager.js`, responsible for:
+
+* Loading chats
+* Sending messages
+* Forking secondary chats
+* Simulating streaming responses
+
+All API interactions are defined in `api/chats.js`, which attaches the user’s Google API Key to each request.
 
 ---
 
 # **Future Features**
 
-- Context transfer back to the primary chat from the secondary chat. This will give the user a more continuous learning/reading experience when they resume conversation in the primary chat.
+* Automatic context transfer from secondary chats back to the primary thread
+* Intelligent suggestions for when to fork a conversation
+* Multimodal branches such as image-based or diagram-specific side threads
 
-- The system could also learn from forking and questining behavior of the user and offer suggestive question when creating a secondary chat.
+---
 
-- Multimodal capabilities such as forking an image-based explanation or exploring diagrams in separate secondary conversation.
+# **Running the Application Locally**
+
+This guide explains how to run the Double Espresso Agent locally using FastAPI for the backend and React + Vite for the frontend.
+
+---
+
+## **1. Prerequisites**
+
+* Python 3.12+
+* Node.js 18+
+* npm or yarn
+* Google API Key (Gemini)
+* pip / virtual environment
+* SQLite (included with Python)
+
+---
+
+## **2. Backend Setup (FastAPI + Google ADK)**
+
+### **Step 1 — Create and activate a virtual environment**
+
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate     # Linux/Mac
+venv\Scripts\activate        # Windows
+```
+
+### **Step 2 — Install dependencies**
+
+```bash
+pip install -r requirements.txt
+```
+
+### **Step 3 — Create a `.env` file inside `backend/`**
+
+```env
+GOOGLE_API_KEY=your_api_key_here
+DATABASE_URL=sqlite:///./chat.db
+ADK_SESSION_DB_URL=sqlite:///./adk_sessions.db
+```
+
+### **Step 4 — Initialize the database**
+
+```bash
+python -c "from app.db.models_init import init_db; init_db()"
+```
+
+### **Step 5 — Start the FastAPI server**
+
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+Backend runs at:
+
+```
+http://127.0.0.1:8000
+```
+
+API docs:
+
+```
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## **3. Frontend Setup (React + Vite)**
+
+### **Install dependencies**
+
+```bash
+cd frontend
+npm install
+```
+
+### **Start the frontend**
+
+```bash
+npm run dev
+```
+
+Frontend opens at:
+
+```
+http://127.0.0.1:5173
+```
+
+---
+
+## **4. Providing Your Google API Key**
+
+The frontend will prompt you to enter your Gemini API Key.
+
+![API Request Screen](./assets/DEA_img_00.png)
