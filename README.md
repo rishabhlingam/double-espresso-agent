@@ -1,4 +1,6 @@
-# **Double Espresso Agent**
+# **Double Espresso Agent** ☕☕
+
+![Thumbnail](./assets/thumbnail.png)
 
 ## **Problem Statement**
 
@@ -138,6 +140,7 @@ pip install -r requirements.txt
 ### **Step 3 — Create a `.env` file inside `backend/`**
 
 ```env
+GOOGLE_GENAI_USE_VERTEXAI=0
 GOOGLE_API_KEY=your_api_key_here
 DATABASE_URL=sqlite:///./chat.db
 ADK_SESSION_DB_URL=sqlite:///./adk_sessions.db
