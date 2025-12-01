@@ -38,7 +38,7 @@ export default function EnterApiKey({ onApiKeySaved }) {
           type="password"
           className="w-full p-3 rounded-md bg-foam text-espresso border border-mocha
                      focus:ring-2 focus:ring-caramel outline-none"
-          placeholder="GOOGLE_API_KEY"
+          placeholder="GOOGLE API KEY"
           value={key}
           onChange={(e) => setKey(e.target.value)}
         />
