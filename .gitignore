@@ -1,33 +1,39 @@
-# -------------------------
+# ============================
 # ENVIRONMENT VARIABLES
-# -------------------------
+# ============================
 .env
 *.env
 
-# -------------------------
+# ============================
 # PYTHON BACKEND
-# -------------------------
+# ============================
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# Local SQLite DBs
 *.sqlite3
 *.db
 chat.db
+adk_sessions.db
 
 # Virtual environments
 venv/
-.env/
 .venv/
+env/
+.env/
 
-# FastAPI / ADK cache
+# Logs
 *.log
-.adk/
-adk_client/__pycache__/
 
-# -------------------------
+# ADK cache / artifacts
+.adk/
+
+# ============================
 # NODE / FRONTEND
-# -------------------------
+# ============================
+# Dependencies
 node_modules/
 frontend/node_modules/
 backend/frontend/node_modules/
@@ -39,28 +45,26 @@ frontend/dist/
 backend/frontend/dist/
 
 # Cache
+*.local
+*.cache
+.vite/
 .npm/
 .npm-cache/
 .pnpm-store/
 .yarn/
 .yarn-cache/
 
-# Vite / React stuff
-*.local
-*.cache
-.vite/
-
-# -------------------------
+# ============================
 # OS & EDITOR FILES
-# -------------------------
+# ============================
 .DS_Store
 Thumbs.db
 .vscode/
+.idea/
 *.swp
 *.swo
 
-# -------------------------
+# ============================
 # MISC
-# -------------------------
-*.log
+# ============================
 UI Changes.txt
